@@ -1,0 +1,287 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swarnim's LTM + Gym Tracker</title>
+<style>
+:root{
+  --bg:#f5f7fb; --card:#fff; --text:#172033; --muted:#667085;
+  --line:#e5e7eb; --accent:#4f46e5; --accent2:#7c3aed;
+  --good:#15803d; --warn:#b45309; --danger:#b91c1c;
+  --shadow:0 8px 30px rgba(15,23,42,.07); --radius:18px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0}
+.app{display:grid;grid-template-columns:245px 1fr;min-height:100vh}
+.sidebar{background:#111827;color:#fff;padding:24px 16px;position:sticky;top:0;height:100vh}
+.brand{font-size:20px;font-weight:800;margin:0 8px 24px}
+.brand span{display:block;color:#a5b4fc;font-size:12px;font-weight:500;margin-top:3px}
+.nav button{width:100%;background:transparent;color:#cbd5e1;text-align:left;padding:12px;border-radius:11px;margin:3px 0}
+.nav button.active,.nav button:hover{background:#1f2937;color:#fff}
+.sidebar-note{position:absolute;bottom:20px;left:18px;right:18px;color:#94a3b8;font-size:12px}
+main{padding:28px;max-width:1400px;width:100%;margin:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}
+h1{margin:0;font-size:28px}.subtitle{color:var(--muted);margin-top:3px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:10px 14px;border-radius:10px;background:#fff;border:1px solid var(--line)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.stat-value{font-size:28px;font-weight:800;margin-top:5px}.muted{color:var(--muted)}
+.progress{height:9px;background:#eef2f7;border-radius:99px;overflow:hidden;margin-top:10px}
+.progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px}
+.section-title h2{margin:0;font-size:18px}
+.week{grid-template-columns:repeat(7,minmax(120px,1fr));overflow:auto}
+.day{min-height:160px}.dayhead{font-weight:800}.daydate{font-size:12px;color:var(--muted)}
+.task{display:flex;gap:8px;align-items:flex-start;margin:10px 0;font-size:13px}
+.task input{margin-top:4px}
+.badge{display:inline-flex;padding:4px 8px;border-radius:99px;background:#eef2ff;color:#4338ca;font-size:11px;font-weight:700}
+.table{width:100%;border-collapse:collapse}.table th,.table td{padding:11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.table th{font-size:12px;color:var(--muted)}
+input[type="text"],input[type="number"],input[type="time"],input[type="date"],select{
+  width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--text)
+}
+.formgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.exercise-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.exercise{border:1px solid var(--line);border-radius:13px;padding:13px}
+.exercise.done{background:#f0fdf4;border-color:#bbf7d0}
+.exercise-top{display:flex;justify-content:space-between;gap:8px}
+.small{font-size:12px}
+.checkrow{display:flex;align-items:center;gap:8px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.notice{padding:12px 14px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.hidden{display:none!important}
+@media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.sidebar-note{display:none}.stats{grid-template-columns:repeat(2,1fr)}.week{grid-template-columns:repeat(7,170px)}}
+@media(max-width:600px){main{padding:16px}.stats,.formgrid,.exercise-grid{grid-template-columns:1fr}.topbar{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">LTM + Gym Tracker<span>Study • Train • Review</span></div>
+    <div class="nav">
+      <button class="active" data-page="dashboard">📊 Dashboard</button>
+      <button data-page="study">📚 Study Roadmap</button>
+      <button data-page="gym">🏋️ Gym</button>
+      <button data-page="schedule">🗓 Weekly Schedule</button>
+      <button data-page="settings">⚙️ Settings</button>
+    </div>
+    <div class="sidebar-note">Everything is stored locally in your browser. No account required.</div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <div><h1 id="pageTitle">Dashboard</h1><div class="subtitle" id="pageSubtitle">Your LTM preparation and gym command center.</div></div>
+      <div class="actions"><button class="btn" onclick="resetToday()">Reset today's checks</button><button class="btn primary" onclick="exportData()">Export progress</button></div>
+    </div>
+
+    <section id="dashboard" class="page">
+      <div class="grid stats">
+        <div class="card"><div class="muted">Study progress</div><div class="stat-value" id="studyPct">0%</div><div class="progress"><i id="studyBar" style="width:0%"></i></div></div>
+        <div class="card"><div class="muted">Gym sessions</div><div class="stat-value" id="gymSessions">0/5</div><div class="progress"><i id="gymBar" style="width:0%"></i></div></div>
+        <div class="card"><div class="muted">Current streak</div><div class="stat-value" id="streak">0</div><div class="muted">study/gym activity days</div></div>
+        <div class="card"><div class="muted">Cycle day</div><div class="stat-value" id="cycleDay">1</div><div class="muted">10-day check-in reminder</div></div>
+      </div>
+
+      <div class="section-title"><h2>Today</h2><span class="badge" id="todayLabel"></span></div>
+      <div class="card" id="todayCard"></div>
+
+      <div class="section-title"><h2>This week</h2><span class="muted">Gym time can be changed independently for every day.</span></div>
+      <div class="grid week" id="weekGrid"></div>
+    </section>
+
+    <section id="study" class="page hidden">
+      <div class="card">
+        <div class="toolbar"><span class="badge">Track A — Python</span><span class="badge">Track B — DSA</span><span class="badge">Track C — SQL</span><span class="badge">Track D — Analyst Toolkit</span></div>
+        <div class="section-title"><h2>Roadmap checklist</h2><div class="muted" id="roadmapCount"></div></div>
+        <div id="roadmap"></div>
+      </div>
+    </section>
+
+    <section id="gym" class="page hidden">
+      <div class="card">
+        <div class="toolbar"><label style="min-width:180px">Workout day <select id="workoutSelect" onchange="renderWorkout()"></select></label><label style="min-width:180px">Session time <input type="time" id="gymTime" onchange="saveGymTime()"></label><button class="btn" onclick="markWorkoutComplete()">Mark session complete</button></div>
+        <div class="notice" style="margin-top:14px">Gym timing is intentionally editable. The plan notes 5:30–7 PM as one workable window, but morning training is also listed as an option.</div>
+        <div class="section-title"><h2 id="workoutTitle"></h2><span class="muted" id="workoutStatus"></span></div>
+        <div class="exercise-grid" id="exerciseGrid"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2 style="margin-top:0">Progression log</h2>
+        <p class="muted">Record your working weight and reps. The source plan says to add weight next session when you reach the top of the rep range with clean form and 1–2 reps left in reserve.</p>
+        <div id="progressionLog"></div>
+      </div>
+    </section>
+
+    <section id="schedule" class="page hidden">
+      <div class="card">
+        <div class="section-title"><h2>Flexible weekly rhythm</h2><span class="muted">Change any gym time without changing the study plan.</span></div>
+        <table class="table">
+          <thead><tr><th>Day</th><th>Gym</th><th>Study anchor</th><th>Time</th><th>Done</th></tr></thead>
+          <tbody id="scheduleTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="settings" class="page hidden">
+      <div class="card">
+        <h2 style="margin-top:0">Settings</h2>
+        <div class="formgrid">
+          <label>Cycle start date<input type="date" id="cycleStart" onchange="saveSettings()"></label>
+          <label>Study block (minutes)<input type="number" id="studyMinutes" min="15" step="15" onchange="saveSettings()"></label>
+          <label>Default gym time<input type="time" id="defaultGymTime" onchange="saveSettings()"></label>
+        </div>
+        <div style="margin-top:16px" class="notice">The roadmap specifies a 90-minute study block and a weekly split of baseline/analyst work.</div>
+        <div class="section-title"><h2>Data</h2></div>
+        <button class="btn" onclick="clearAll()">Clear all local progress</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const roadmap = [
+  {track:"A",name:"Python",items:[
+    "Variables, data types, control flow (if/else, loops)",
+    "Functions, scope, basic error handling",
+    "OOP: classes, objects, inheritance",
+    "Basic file handling",
+    "Lists and dictionaries fluently"
+  ]},
+  {track:"B",name:"DSA Patterns",items:[
+    "Sliding window",
+    "Two pointers",
+    "Linear search and binary search",
+    "Sorting: bubble/insertion/selection",
+    "Merge sort and quicksort",
+    "Big-O basics",
+    "Hashmap / frequency problems",
+    "Basic recursion",
+    "Practice 6–8 problems per pattern"
+  ]},
+  {track:"C",name:"SQL",items:[
+    "SELECT, WHERE, ORDER BY, LIMIT",
+    "Filtering: IN, BETWEEN, LIKE, IS NULL",
+    "Aggregates: COUNT, SUM, AVG, MIN, MAX",
+    "GROUP BY and HAVING",
+    "INNER / LEFT / RIGHT JOIN",
+    "FULL OUTER JOIN concept",
+    "SELF JOIN and multi-table joins",
+    "Understand duplicate rows and NULL behavior in joins",
+    "Subqueries in WHERE, FROM, SELECT",
+    "EXISTS vs IN",
+    "CTEs (WITH)",
+    "Recursive CTEs",
+    "CASE WHEN",
+    "Window functions: ROW_NUMBER, RANK, DENSE_RANK",
+    "LEAD / LAG and running totals",
+    "OVER and PARTITION BY",
+    "Date/time functions",
+    "UNION vs UNION ALL",
+    "What indexes do",
+    "Why SELECT * is a bad habit"
+  ]},
+  {track:"D",name:"Data Analyst Toolkit",items:[
+    "Excel: pivot tables",
+    "Excel: VLOOKUP/XLOOKUP",
+    "Excel: conditional formatting",
+    "Choose Power BI or Tableau",
+    "Pandas: data cleaning",
+    "Pandas: grouping",
+    "Pandas: merging DataFrames"
+  ]}
+];
+
+const workouts = [
+ {day:"Day 1",name:"Push",focus:"Chest, Shoulders, Triceps",cardio:"15–20 min incline treadmill walk or cycling",ex:[
+  ["Bench Press (barbell or dumbbell)","4 x 6–8"],["Incline Dumbbell Press","3 x 8–10"],["Overhead Press","3 x 8–10"],["Lateral Raises","3 x 12–15"],["Triceps Pushdown","3 x 10–12"],["Overhead Triceps Extension","3 x 10–12"]]},
+ {day:"Day 2",name:"Pull",focus:"Back, Biceps",cardio:"15–20 min incline treadmill walk or cycling",ex:[
+  ["Romanian Deadlift","3 x 6–8"],["Pull-ups or Lat Pulldown","4 x 8–10"],["Barbell/Dumbbell Row","3 x 8–10"],["Face Pulls","3 x 12–15"],["Bicep Curls","3 x 10–12"],["Hammer Curls","3 x 10–12"]]},
+ {day:"Day 3",name:"Legs",focus:"Quads, Hamstrings, Glutes, Calves",cardio:"No extra cardio — recovery day",ex:[
+  ["Squat (goblet or barbell) or Leg Press","4 x 8–10"],["Romanian Deadlift variation or Leg Curl","3 x 10–12"],["Leg Extension","3 x 12–15"],["Walking Lunges","3 x 12 each leg"],["Calf Raises","4 x 15–20"]]},
+ {day:"Day 4",name:"Upper",focus:"Lighter volume, different rep range",cardio:"15–20 min incline walk or cycling",ex:[
+  ["Incline Machine/Dumbbell Press","3 x 10–12"],["Seated Cable Row","3 x 10–12"],["Dumbbell Shoulder Press","3 x 10–12"],["Lat Pulldown","3 x 10–12"],["Lateral Raise + Rear Delt Fly (superset)","3 x 15"],["Curl/Triceps (superset)","3 x 12"]]},
+ {day:"Day 5",name:"Lower + Core",focus:"Posterior chain focus",cardio:"Core circuit: plank, Russian twists, leg raises — 3 rounds",ex:[
+  ["Bulgarian Split Squat","3 x 10 each leg"],["Hip Thrust","4 x 10–12"],["Seated Calf Raise","3 x 15–20"]]}
+];
+
+const week = [
+ ["Mon","A/B — Python or one DSA pattern"],["Tue","C — SQL"],["Wed","A/B"],["Thu","C — SQL"],["Fri","D — Excel/Power BI/Pandas"],["Sat","D"],["Sun","Rest / light review"]
+];
+
+let state = JSON.parse(localStorage.getItem("ltmGymTracker") || "null") || {
+  checks:{}, gymTimes:{}, gymDone:{}, exerciseDone:{}, weights:{},
+  cycleStart:new Date().toISOString().slice(0,10), studyMinutes:90, defaultGymTime:"18:00"
+};
+
+function save(){localStorage.setItem("ltmGymTracker",JSON.stringify(state)); renderAll()}
+function key(prefix,id){return prefix+"_"+id}
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function dayIndex(){return (new Date().getDay()+6)%7}
+function pct(n,d){return d?Math.round(n/d*100):0}
+function renderAll(){renderDashboard();renderRoadmap();renderWorkout();renderSchedule();renderSettings()}
+function renderDashboard(){
+  const done=Object.values(state.checks).filter(Boolean).length, total=roadmap.reduce((a,t)=>a+t.items.length,0);
+  const study=pct(done,total); document.getElementById("studyPct").textContent=study+"%";document.getElementById("studyBar").style.width=study+"%";
+  const gd=Object.values(state.gymDone).filter(Boolean).length; document.getElementById("gymSessions").textContent=Math.min(gd,5)+"/5";document.getElementById("gymBar").style.width=Math.min(100,gd/5*100)+"%";
+  const start=new Date(state.cycleStart+"T00:00:00");const diff=Math.max(0,Math.floor((new Date()-start)/86400000));document.getElementById("cycleDay").textContent=(diff%32)+1;
+  document.getElementById("streak").textContent=calcStreak();
+  document.getElementById("todayLabel").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+  const d=dayIndex(), item=week[d];
+  const time=state.gymTimes[d]||state.defaultGymTime;
+  document.getElementById("todayCard").innerHTML=`<div class="toolbar"><span class="badge">${item[0]}</span><strong>${item[1]}</strong><span class="muted">Gym: ${time||"Not set"}</span></div>
+  <div class="task"><input type="checkbox" ${state.checks["daily_"+todayISO()]?"checked":""} onchange="toggleCheck('daily_${todayISO()}')"><span>Complete today's study block</span></div>
+  <div class="task"><input type="checkbox" ${state.gymDone[todayISO()]?"checked":""} onchange="toggleGymDate('${todayISO()}')"><span>Complete gym / planned rest activity</span></div>
+  <div class="muted small">Tip: edit today's gym time in Weekly Schedule. Study block remains flexible.</div>`;
+  const grid=document.getElementById("weekGrid");grid.innerHTML="";
+  week.forEach((w,i)=>{const date=new Date();date.setDate(date.getDate()-d+i);const iso=date.toISOString().slice(0,10);const time=state.gymTimes[i]||state.defaultGymTime;
+    grid.innerHTML+=`<div class="card day"><div class="dayhead">${w[0]}</div><div class="daydate">${date.toLocaleDateString(undefined,{month:"short",day:"numeric"})}</div><div style="margin-top:10px"><span class="badge">${time||"No gym time"}</span></div><div class="task"><input type="checkbox" ${state.checks["daily_"+iso]?"checked":""} onchange="toggleCheck('daily_${iso}')"><span>${w[1]}</span></div><div class="task"><input type="checkbox" ${state.gymDone[iso]?"checked":""} onchange="toggleGymDate('${iso}')"><span>${i===6?"Rest / light review":"Gym"}</span></div></div>`});
+}
+function calcStreak(){let s=0;for(let i=0;i<365;i++){let d=new Date();d.setDate(d.getDate()-i);let iso=d.toISOString().slice(0,10);if(state.checks["daily_"+iso]||state.gymDone[iso])s++;else if(i>0)break}return s}
+function toggleCheck(k){state.checks[k]=!state.checks[k];save()}
+function toggleGymDate(k){state.gymDone[k]=!state.gymDone[k];save()}
+function renderRoadmap(){
+  const el=document.getElementById("roadmap");el.innerHTML="";
+  let count=0,total=0;
+  roadmap.forEach(t=>{let box=document.createElement("div");box.className="card";box.style.margin="12px 0";box.innerHTML=`<div class="section-title" style="margin:0 0 8px"><h2>Track ${t.track} — ${t.name}</h2></div>`;
+    t.items.forEach((it,j)=>{let k=key("topic",t.track+"_"+j);total++;if(state.checks[k])count++;box.innerHTML+=`<div class="task"><input type="checkbox" ${state.checks[k]?"checked":""} onchange="toggleCheck('${k}')"><span>${it}</span></div>`});el.appendChild(box)});
+  document.getElementById("roadmapCount").textContent=`${count}/${total} topics complete (${pct(count,total)}%)`;
+}
+function renderWorkout(){
+  const s=document.getElementById("workoutSelect");if(!s.options.length)workouts.forEach((w,i)=>s.innerHTML+=`<option value="${i}">${w.day} — ${w.name}</option>`);
+  const w=workouts[+s.value||0];document.getElementById("workoutTitle").textContent=`${w.day} — ${w.name} (${w.focus})`;
+  document.getElementById("gymTime").value=state.gymTimes[+s.value||0]||state.defaultGymTime;
+  const date=todayISO(), status=state.gymDone[date]?"Completed today":"Not completed today";document.getElementById("workoutStatus").textContent=status;
+  const grid=document.getElementById("exerciseGrid");grid.innerHTML="";
+  w.ex.forEach((e,j)=>{let k=key("ex",(+s.value||0)+"_"+j), done=state.exerciseDone[k];grid.innerHTML+=`<div class="exercise ${done?"done":""}"><div class="exercise-top"><div><strong>${e[0]}</strong><div class="muted small">${e[1]}</div></div><input type="checkbox" ${done?"checked":""} onchange="toggleExercise('${k}')"></div><div style="margin-top:10px"><input placeholder="Working weight / notes" value="${state.weights[k]||""}" onchange="setWeight('${k}',this.value)"></div></div>`});
+  document.getElementById("progressionLog").innerHTML=`<div class="muted small">${w.cardio}</div>`;
+}
+function toggleExercise(k){state.exerciseDone[k]=!state.exerciseDone[k];save()}
+function setWeight(k,v){state.weights[k]=v;localStorage.setItem("ltmGymTracker",JSON.stringify(state))}
+function saveGymTime(){let i=+document.getElementById("workoutSelect").value;state.gymTimes[i]=document.getElementById("gymTime").value;save()}
+function markWorkoutComplete(){state.gymDone[todayISO()]=true;save()}
+function renderSchedule(){
+ const tb=document.getElementById("scheduleTable");tb.innerHTML="";
+ week.forEach((w,i)=>{let time=state.gymTimes[i]||state.defaultGymTime;tb.innerHTML+=`<tr><td><strong>${w[0]}</strong></td><td><input type="time" value="${time}" onchange="setWeekTime(${i},this.value)"></td><td>${w[1]}</td><td><span class="muted">${state.studyMinutes} min</span></td><td><input type="checkbox" ${state.checks["weekly_"+i]?"checked":""} onchange="toggleCheck('weekly_${i}')"></td></tr>`});
+}
+function setWeekTime(i,v){state.gymTimes[i]=v;save()}
+function renderSettings(){document.getElementById("cycleStart").value=state.cycleStart;document.getElementById("studyMinutes").value=state.studyMinutes;document.getElementById("defaultGymTime").value=state.defaultGymTime}
+function saveSettings(){state.cycleStart=document.getElementById("cycleStart").value;state.studyMinutes=+document.getElementById("studyMinutes").value||90;state.defaultGymTime=document.getElementById("defaultGymTime").value||"18:00";save()}
+function resetToday(){delete state.checks["daily_"+todayISO()];delete state.gymDone[todayISO()];save()}
+function clearAll(){if(confirm("Clear all local progress?")){localStorage.removeItem("ltmGymTracker");location.reload()}}
+function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ltm-gym-progress.json";a.click();URL.revokeObjectURL(a.href)}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));document.getElementById(b.dataset.page).classList.remove("hidden");document.getElementById("pageTitle").textContent=b.textContent.replace(/^.\s/,"");});
+renderAll();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+}
+</script>
+</body>
+</html>
