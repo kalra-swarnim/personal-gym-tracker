@@ -1,4 +1,4 @@
-const CACHE = "ltm-gym-v2";
+const CACHE = "ltm-gym-v3";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", event => {

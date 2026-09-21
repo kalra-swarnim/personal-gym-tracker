@@ -124,6 +124,102 @@ html,body{overflow-x:hidden}
 }
 </style>
 
+
+<style>
+@media(max-width:900px){
+  *{min-width:0}
+  body{padding-bottom:calc(96px + env(safe-area-inset-bottom));overflow-x:hidden}
+  main{padding:14px 14px calc(110px + env(safe-area-inset-bottom))}
+  .card{width:100%;overflow:hidden}
+  .topbar{padding:0 2px}
+  .topbar h1{font-size:28px;line-height:1.15}
+  .subtitle{line-height:1.35}
+
+  /* Dashboard */
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stats .card{min-width:0}
+  .week{grid-template-columns:1fr}
+  .week .day{display:block!important}
+  .week .day:nth-child(n+5){display:none!important}
+
+  /* Forms / Settings */
+  .formgrid{display:block}
+  .formgrid>label{display:block;margin-bottom:14px}
+  input[type="text"],input[type="number"],input[type="time"],input[type="date"],select{
+    width:100%;max-width:100%;min-width:0;min-height:48px;
+    font-size:16px;padding:10px 12px;
+  }
+  input[type="date"],input[type="time"]{
+    -webkit-appearance:auto;appearance:auto;
+    text-align:left;
+  }
+  .notice{font-size:14px;line-height:1.5}
+
+  /* Gym */
+  #gym .toolbar{
+    display:block;
+  }
+  #gym .toolbar>label{
+    display:block;width:100%;margin-bottom:12px!important;
+  }
+  #gym .toolbar .btn{
+    display:block;width:100%;margin-top:4px;
+  }
+  #gymTime{width:100%!important}
+  #workoutTitle{
+    font-size:22px;line-height:1.25;margin:0;
+  }
+  #workoutStatus{
+    display:inline-block;margin-top:7px;padding:4px 9px;border-radius:99px;
+    background:#f1f5f9;font-size:12px;
+  }
+  .exercise-grid{display:block}
+  .exercise{width:100%;margin-bottom:10px;overflow:hidden}
+  .exercise-top{align-items:flex-start}
+  .exercise-top strong{font-size:16px;line-height:1.3}
+  .exercise input[type="checkbox"]{width:22px;height:22px;flex:0 0 auto}
+  .exercise input[type="text"]{width:100%;box-sizing:border-box}
+
+  /* Schedule: mobile card rows instead of a table */
+  #schedule .card{padding:14px}
+  #schedule .section-title{
+    display:block;margin:0 0 12px;
+  }
+  #schedule .section-title h2{margin-bottom:4px}
+  #scheduleTable{display:block}
+  #scheduleTable tr{
+    display:grid;
+    grid-template-columns:52px minmax(0,1fr) 38px;
+    gap:10px;
+    align-items:center;
+    padding:11px 0;
+    border-bottom:1px solid var(--line);
+  }
+  #scheduleTable tr:first-child{display:none}
+  #scheduleTable td{
+    display:block;padding:0;border:0;
+  }
+  #scheduleTable td:nth-child(1){font-weight:800}
+  #scheduleTable td:nth-child(2) input{width:100%;min-width:0}
+  #scheduleTable td:nth-child(3),
+  #scheduleTable td:nth-child(4){display:none}
+  #scheduleTable td:nth-child(5){text-align:center}
+  #scheduleTable td:nth-child(5) input{width:22px;height:22px}
+
+  /* Fixed bottom navigation */
+  .bottom-nav{
+    height:72px;
+    padding:5px 2px calc(5px + env(safe-area-inset-bottom));
+  }
+  .bottom-nav-btn{min-width:0}
+  .bottom-nav-btn span{font-size:20px}
+  .bottom-nav-btn small{font-size:10px}
+
+  /* Drawer */
+  .sidebar{width:min(300px,82vw)}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
