@@ -60,20 +60,94 @@ input[type="text"],input[type="number"],input[type="time"],input[type="date"],se
 @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.sidebar-note{display:none}.stats{grid-template-columns:repeat(2,1fr)}.week{grid-template-columns:repeat(7,170px)}}
 @media(max-width:600px){main{padding:16px}.stats,.formgrid,.exercise-grid{grid-template-columns:1fr}.topbar{align-items:flex-start;flex-direction:column}}
 </style>
+
+<style>
+/* V2 mobile-first layout */
+html,body{overflow-x:hidden}
+.mobile-header,.bottom-nav,.drawer-backdrop,.drawer-close{display:none}
+@media(max-width:900px){
+  body{padding-bottom:74px}
+  .app{display:block;min-height:100vh}
+  .sidebar{
+    position:fixed;z-index:1000;left:0;top:0;bottom:0;width:285px;height:100vh;
+    transform:translateX(-105%);transition:transform .22s ease;box-shadow:12px 0 35px rgba(0,0,0,.18);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .drawer-backdrop{
+    position:fixed;z-index:999;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(2px)
+  }
+  .drawer-backdrop.open{display:block}
+  .drawer-close{
+    display:block;position:absolute;right:14px;top:12px;width:34px;height:34px;
+    border-radius:10px;background:#1f2937;color:#fff;font-size:24px;line-height:1
+  }
+  .mobile-header{
+    display:flex;position:sticky;top:0;z-index:900;height:58px;padding:0 14px;
+    align-items:center;justify-content:space-between;background:#111827;color:#fff;
+    box-shadow:0 2px 12px rgba(15,23,42,.15)
+  }
+  .mobile-brand{font-weight:800;font-size:17px}
+  .icon-btn{width:38px;height:38px;border-radius:10px;background:#1f2937;color:#fff;font-size:20px}
+  main{padding:16px;max-width:none}
+  .topbar{margin:6px 0 18px;display:block}
+  .topbar .actions{display:none}
+  h1{font-size:25px}
+  .subtitle{font-size:13px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .card{padding:15px;border-radius:15px}
+  .stat-value{font-size:24px}
+  .week{display:grid;grid-template-columns:1fr;overflow:visible}
+  .week .day{min-height:auto}
+  .week .day:nth-child(n+4){display:none}
+  .section-title{margin:18px 0 10px}
+  .formgrid,.exercise-grid{grid-template-columns:1fr}
+  .table{min-width:0}
+  .table th,.table td{padding:8px 5px;font-size:12px}
+  .table th:nth-child(3),.table td:nth-child(3){display:none}
+  .table th:nth-child(4),.table td:nth-child(4){display:none}
+  .bottom-nav{
+    display:grid;grid-template-columns:repeat(5,1fr);position:fixed;z-index:950;left:0;right:0;bottom:0;
+    height:70px;background:rgba(255,255,255,.96);border-top:1px solid var(--line);
+    box-shadow:0 -6px 24px rgba(15,23,42,.08);padding-bottom:env(safe-area-inset-bottom)
+  }
+  .bottom-nav-btn{background:transparent;color:#667085;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .bottom-nav-btn span{font-size:20px;line-height:1.1}
+  .bottom-nav-btn small{font-size:10px;font-weight:700}
+  .bottom-nav-btn.active{color:var(--accent)}
+  #gym .toolbar{display:grid;grid-template-columns:1fr 1fr}
+  #gym .toolbar .btn{grid-column:1/-1}
+  #workoutSelect{min-height:40px}
+  input[type="time"],input[type="date"],input[type="number"],input[type="text"],select{min-height:40px}
+}
+@media(min-width:901px){
+  .sidebar{position:sticky}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar">
-    <div class="brand">LTM + Gym Tracker<span>Study • Train • Review</span></div>
-    <div class="nav">
-      <button class="active" data-page="dashboard">📊 Dashboard</button>
-      <button data-page="study">📚 Study Roadmap</button>
-      <button data-page="gym">🏋️ Gym</button>
-      <button data-page="schedule">🗓 Weekly Schedule</button>
-      <button data-page="settings">⚙️ Settings</button>
-    </div>
-    <div class="sidebar-note">Everything is stored locally in your browser. No account required.</div>
-  </aside>
+  
+<header class="mobile-header">
+  <button class="icon-btn" id="menuBtn" aria-label="Open menu">☰</button>
+  <div class="mobile-brand">LTM + Gym</div>
+  <button class="icon-btn" onclick="exportData()" aria-label="Export progress">↥</button>
+</header>
+
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="brand">LTM + Gym Tracker<span>Study • Train • Review</span></div>
+  <button class="drawer-close" id="drawerClose" aria-label="Close menu">×</button>
+  <div class="nav">
+    <button class="active" data-page="dashboard">📊 Dashboard</button>
+    <button data-page="study">📚 Study Roadmap</button>
+    <button data-page="gym">🏋️ Gym</button>
+    <button data-page="schedule">🗓 Weekly Schedule</button>
+    <button data-page="settings">⚙️ Settings</button>
+  </div>
+  <div class="sidebar-note">Progress is stored locally on this device.</div>
+</aside>
+
 
   <main>
     <div class="topbar">
@@ -141,7 +215,16 @@ input[type="text"],input[type="number"],input[type="time"],input[type="date"],se
         <button class="btn" onclick="clearAll()">Clear all local progress</button>
       </div>
     </section>
-  </main>
+  
+<nav class="bottom-nav" aria-label="Primary navigation">
+  <button class="bottom-nav-btn active" data-page="dashboard"><span>⌂</span><small>Home</small></button>
+  <button class="bottom-nav-btn" data-page="gym"><span>🏋️</span><small>Gym</small></button>
+  <button class="bottom-nav-btn" data-page="study"><span>📚</span><small>Study</small></button>
+  <button class="bottom-nav-btn" data-page="schedule"><span>▣</span><small>Schedule</small></button>
+  <button class="bottom-nav-btn" data-page="settings"><span>☰</span><small>More</small></button>
+</nav>
+
+</main>
 </div>
 
 <script>
@@ -275,13 +358,26 @@ function saveSettings(){state.cycleStart=document.getElementById("cycleStart").v
 function resetToday(){delete state.checks["daily_"+todayISO()];delete state.gymDone[todayISO()];save()}
 function clearAll(){if(confirm("Clear all local progress?")){localStorage.removeItem("ltmGymTracker");location.reload()}}
 function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ltm-gym-progress.json";a.click();URL.revokeObjectURL(a.href)}
-document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));document.getElementById(b.dataset.page).classList.remove("hidden");document.getElementById("pageTitle").textContent=b.textContent.replace(/^.\s/,"");});
-renderAll();
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+
+function goPage(page){
+  document.querySelectorAll("[data-page]").forEach(x=>x.classList.toggle("active",x.dataset.page===page));
+  document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+  document.getElementById(page).classList.remove("hidden");
+  const labels={dashboard:"Dashboard",study:"Study Roadmap",gym:"Gym",schedule:"Weekly Schedule",settings:"Settings"};
+  document.getElementById("pageTitle").textContent=labels[page]||"LTM + Gym Tracker";
+  const sb=document.getElementById("sidebar"), bd=document.getElementById("drawerBackdrop");
+  sb?.classList.remove("open"); bd?.classList.remove("open");
+  window.scrollTo({top:0,behavior:"smooth"});
 }
+document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>goPage(b.dataset.page)));
+document.getElementById("menuBtn")?.addEventListener("click",()=>{
+  document.getElementById("sidebar").classList.add("open");
+  document.getElementById("drawerBackdrop").classList.add("open");
+});
+document.getElementById("drawerClose")?.addEventListener("click",()=>goPage(document.querySelector(".bottom-nav-btn.active")?.dataset.page||"dashboard"));
+document.getElementById("drawerBackdrop")?.addEventListener("click",()=>document.getElementById("drawerClose").click());
+
+renderAll();
 </script>
 </body>
 </html>
